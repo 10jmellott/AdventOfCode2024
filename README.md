@@ -33,13 +33,51 @@ matches = [pattern.match(line).groups() for line in lines]
 
 first_matches = [int(match[0]) for match in matches]
 second_matches = [int(match[1]) for match in matches]
+```
+
+We now have the lists parsed, let's visualize the randomness of the lists first.
+
+
+```python
+import matplotlib.pyplot as plt
+
+def plot_scatter():
+    _, ax = plt.subplots()
+    ax.scatter(first_matches, second_matches, s = 1, marker = ',')
+    plt.show()
+
+plot_scatter()
+```
+
+
+    
+![png](README_files/README_6_0.png)
+    
+
+
+Alright, the data's pretty random, next let's just sort the data and see if we can look at how much the data actually deviates.
+
+
+```python
+import matplotlib.pyplot as plt
 
 first_matches.sort()
 second_matches.sort()
 
-diff = [abs(second_matches[i] - first_matches[i]) for i in range(len(first_matches))]
+plot_scatter()
+```
 
-sum(diff)
+
+    
+![png](README_files/README_8_0.png)
+    
+
+
+The data's not too curved looking at it like this, but ultimately we're interested in the deviations here so let's calculate the difference and sum it up.
+
+
+```python
+sum([abs(second_matches[i] - first_matches[i]) for i in range(len(first_matches))])
 ```
 
 
@@ -58,10 +96,31 @@ Now instead of estimating the differences between the two lists, we want to esti
 from collections import Counter
 
 second_matches_count = dict(Counter(second_matches))
+filtered_matches = [match for match in first_matches if match in second_matches_count]
+```
 
-fist_matches_similarity = [match * (second_matches_count[match] if match in second_matches_count else 0) for match in first_matches]
+Now that we have the count of second matches and the value of each valid first match, all that's left is to sum the values. We've plotted the similarities
 
-sum(fist_matches_similarity)
+
+```python
+import matplotlib.pyplot as plt
+
+plt.hist(filtered_matches, bins=10, edgecolor='black')
+plt.title('Histogram of Matched Values')
+plt.show()
+```
+
+
+    
+![png](README_files/README_14_0.png)
+    
+
+
+You can see the rough count of matches, between 2 and 8 for every 10000 values, so it's not a large number. Last all we need to do is cross-calculate the values and sum them up to get our answer.
+
+
+```python
+sum([match * second_matches_count[match] for match in filtered_matches])
 ```
 
 
