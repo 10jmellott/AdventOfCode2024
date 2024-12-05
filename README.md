@@ -263,3 +263,108 @@ sum_instruction(corrupted_instructions)
     107069718
 
 
+
+## Day 4: Ceres Search
+
+Not really much of a surprise, given it's only the fourth day of the Advent, but we didn't find the Chief in the shop's warehouse. However, we're headed next to the [Ceres monitoring station](https://adventofcode.com/2019/day/10) because a random historian pulled out a random device, pressed a button, and we randomly saw the Ceres monitoring station interior on it. Four days into this man(elf?)hunt and we're definitely grasping at straws. Either way, we're here now and an elf wants us to lend a hand at their word search. I suppose we have nothing better to do?
+
+### Part 1
+
+In this word search, we're looking for every instance of the word 'XMAS'. This word search allows words to be horizontal, vertical, diagonal, written backwards, or even overlapping other words. The overlapping words concept tripped me up a bit, but I think it just means letters can be shared across matches.
+
+So, in order to solve this my approach will be to look through each letter, if it is an X sum up every instance there is XMAS horizontal, vertical, or diagonal from that letter. I'm sure I could regex this too, but I feel like I've overused regex on this one, plus I don't want to have to concatenate the various diagonal and vertical string arrays.
+
+I'm also **very** entertained by the idea of someone doing this puzzle by hand.
+
+
+```python
+lines = read_file_to_array('./data/4.txt')
+puzzle = [list(line) for line in lines]
+
+def lookup_puzzle(x, y):
+    if x < 0 or y < 0:
+        return None
+    if y >= len(puzzle) or x >= len(puzzle[y]):
+        return None
+    return puzzle[y][x]
+
+def test_for_xmas_by_char(x, y, dx, dy, char):
+    if lookup_puzzle(x, y) != char:
+        return False
+    if char == 'X':
+        return test_for_xmas_by_char(x + dx, y + dy, dx, dy, 'M')
+    if char == 'M':
+        return test_for_xmas_by_char(x + dx, y + dy, dx, dy, 'A')
+    if char == 'A':
+        return test_for_xmas_by_char(x + dx, y + dy, dx, dy, 'S')
+    if char == 'S':
+        return True
+
+def test_for_xmas_by_direction(x, y, dx, dy):
+    return 1 if test_for_xmas_by_char(x, y, dx, dy, 'X') else 0
+
+def test_for_xmas(x, y):
+    return \
+        test_for_xmas_by_direction(x, y, 1, 0) + \
+        test_for_xmas_by_direction(x, y, -1, 0) + \
+        test_for_xmas_by_direction(x, y, 0, 1) + \
+        test_for_xmas_by_direction(x, y, 0, -1) + \
+        test_for_xmas_by_direction(x, y, 1, 1) + \
+        test_for_xmas_by_direction(x, y, -1, 1) + \
+        test_for_xmas_by_direction(x, y, 1, -1) + \
+        test_for_xmas_by_direction(x, y, -1, -1)
+
+total_matches = 0
+for y in range(len(puzzle)):
+    for x in range(len(puzzle[y])):
+        total_matches += test_for_xmas(x, y)
+
+total_matches
+```
+
+
+
+
+    2468
+
+
+
+### Part 2
+
+Alright, so apparently instead of looking for XMAS as one word. We were instead supposed to be looking for 'MAS' only, but in the form of an X. It looks like the following:
+
+```
+M . S
+. A .
+M . S
+```
+
+This seems achievable, it may even be faster than looking for XMAS since it's more restrictive. Instead I'll just hunt for the letter 'A' to start and then just determine if there's two 'M's and two 'S's in opposite corners from one another.
+
+
+```python
+def test_for_x_mas(x, y):
+    if lookup_puzzle(x, y) != 'A':
+        return 0
+    cross = 0
+    cross += 1 if lookup_puzzle(x - 1, y - 1) == 'M' and lookup_puzzle(x + 1, y + 1) == 'S' else 0
+    cross += 1 if lookup_puzzle(x + 1, y - 1) == 'M' and lookup_puzzle(x - 1, y + 1) == 'S' else 0
+    cross += 1 if lookup_puzzle(x - 1, y + 1) == 'M' and lookup_puzzle(x + 1, y - 1) == 'S' else 0
+    cross += 1 if lookup_puzzle(x + 1, y + 1) == 'M' and lookup_puzzle(x - 1, y - 1) == 'S' else 0
+    return 1 if cross == 2 else 0
+
+total_matches = 0
+for y in range(len(puzzle)):
+    for x in range(len(puzzle[y])):
+        total_matches += test_for_x_mas(x, y)
+
+total_matches
+
+```
+
+
+
+
+    1864
+
+
