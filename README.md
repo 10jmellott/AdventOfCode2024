@@ -205,3 +205,61 @@ len(tolerant_safe_reports)
     569
 
 
+
+## Day 3: Mull It Over
+
+No mas on the Chief Historian yet, so we've wandered over to the shop to see if we can find the chief there, only to find that their computers are on the fritz. The system appears to have corrupted memory and we need to sort out the correct instructions and then execute them.
+
+> Warning: This day's data has a **bad design**, the source data is multiple lines, but you should only consider it as a single line by joining it all together
+
+### Part 1
+
+We're going to look through the memory for all instances of `mul(\d+,\d+)` to determine what values to multiply. There may be similar instructions, even including spaces and the like, and we want to ignore those (I'm betting 'for now' until we get to part 2). Then ultimately we want to find the resulting sum of the results of each multiply instruction.
+
+
+```python
+corrupted_instructions = read_file_to_array('./data/3.txt')
+corrupted_instructions = ''.join(corrupted_instructions) # join the data due to the bad formatting of the source file
+```
+
+The first part is pretty simple, we just run a regex with a couple of capture groups, convert the values, multiply them out, and then add them up. Very methodical.
+
+
+```python
+def sum_instruction(instruction):
+    pattern = re.compile(r'mul\((\d+),(\d+)\)')
+    matches = pattern.findall(instruction)
+    values = map(lambda match: int(match[0]) * int(match[1]), matches)
+    return sum(values)
+
+sum_instruction(corrupted_instructions)
+```
+
+
+
+
+    189600467
+
+
+
+### Part 2
+
+Alright, so I wasn't too far off on my guess here. Apparently there are `do()` and `don't()` instructions here and anything after a `don't()` instruction should be removed, unless you run into a `do()` instruction first. We can handle this by stripping out text from the instructions via two regex commands (there might be a way to do it in one, not sure). _This is the part that tripped me up and realized that I needed to merge the data into a single line_
+
+
+```python
+def trim_instruction(instruction):
+    instruction = re.sub(r"don't\(\)(.+?)do\(\)", '', instruction)
+    instruction = re.sub(r"don't\(\)(.+)$", '', instruction)
+    return instruction
+
+corrupted_instructions = trim_instruction(corrupted_instructions)
+sum_instruction(corrupted_instructions)
+```
+
+
+
+
+    107069718
+
+
